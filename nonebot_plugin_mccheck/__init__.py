@@ -1,6 +1,6 @@
 from nonebot import require
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
-from .config import Config
+from .config import Config, config
 from .configs import lang, lang_data
 from .utils import (
     change_language_to,
@@ -71,6 +71,12 @@ lang_list = on_alconna(
     block=True,
 )
 
+jymc = on_alconna(
+    Alconna("jymc", meta=CommandMeta(compact=True)),
+    priority=10,
+    block=True,
+)
+
 
 @check.handle()
 async def _(p: Arparma, session: Session = UniSession()):
@@ -81,6 +87,19 @@ async def _(p: Arparma, session: Session = UniSession()):
     if not str(port).isdigit() or not (0 <= int(port) <= 65535):
         await check.finish(Text(f"{lang_data[lang]['where_port']}"), reply_to=True)
 
+    if await is_validity_address(address):
+        await get_info(address, port, session)
+        return
+
+
+@jymc.handle()
+async def _(session: Session = UniSession()):
+    host = config.host
+    if not host:
+        await jymc.finish(Text("Error:未配置MCC_HOST"), reply_to=True)
+    address, port = await parse_host(host)
+    if not str(port).isdigit() or not (0 <= int(port) <= 65535):
+        await jymc.finish(Text(f"{lang_data[lang]['where_port']}"), reply_to=True)
     if await is_validity_address(address):
         await get_info(address, port, session)
         return
